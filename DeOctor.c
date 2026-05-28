@@ -100,19 +100,6 @@ void printHeader(const char* judul) {
     printf("\n");
 }
 
-void getInputString(const char* prompt, char* buffer) {
-    printf("  %s : ", prompt);
-    fgets(buffer, MAX_STR, stdin);
-    buffer[strcspn(buffer, "\n")] = '\0';
-}
-
-void getInputInt(const char* prompt, int* val) {
-    char tmp[MAX_STR];
-    printf("  %s : ", prompt);
-    fgets(tmp, MAX_STR, stdin);
-    *val = atoi(tmp);
-}
-
 char* getCurrentDate() {
     static char buf[20];
     time_t t = time(NULL);
@@ -121,55 +108,14 @@ char* getCurrentDate() {
     return buf;
 }
 
-void simpanData() {
+void loadData() {
     FILE *f;
-
-    f = fopen(FILE_PASIEN, "wb");
-    if (f) {
-        fwrite(&jumlahPasien, sizeof(int), 1, f);
-        fwrite(daftarPasien, sizeof(Pasien), jumlahPasien, f);
-        fclose(f);
-    }
-
-    f = fopen(FILE_DOKTER, "wb");
-    if (f) {
-        fwrite(&jumlahDokter, sizeof(int), 1, f);
-        fwrite(daftarDokter, sizeof(Dokter), jumlahDokter, f);
-        fclose(f);
-    }
-
-    f = fopen(FILE_RESERVASI, "wb");
-    if (f) {
-        fwrite(&jumlahReservasi, sizeof(int), 1, f);
-        fwrite(daftarReservasi, sizeof(Reservasi), jumlahReservasi, f);
-        fclose(f);
-    }
-
-    f = fopen(FILE_RESEP, "wb");
-    if (f) {
-        fwrite(&jumlahResep, sizeof(int), 1, f);
-        fwrite(daftarResep, sizeof(Resep), jumlahResep, f);
-        fclose(f);
-    }
-
-    f = fopen(FILE_FEEDBACK, "wb");
-    if (f) {
-        fwrite(&jumlahFeedback, sizeof(int), 1, f);
-        fwrite(daftarFeedback, sizeof(Feedback), jumlahFeedback, f);
-        fclose(f);
-    }
-}
-
-int loadData() {
-    FILE *f;
-    int berhasil = 0;
 
     f = fopen(FILE_PASIEN, "rb");
     if (f) {
         fread(&jumlahPasien, sizeof(int), 1, f);
         fread(daftarPasien, sizeof(Pasien), jumlahPasien, f);
         fclose(f);
-        berhasil = 1;
     }
 
     f = fopen(FILE_DOKTER, "rb");
