@@ -301,10 +301,18 @@ void manajemenAkunPasien() {
         printf("  [2] Ganti Username dan Password\n");
         printf("  [0] Kembali\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
-        if      (pilihan == 1) lihatInfoAkunPasien();
-        else if (pilihan == 2) gantiCredentialPasien();
-        else if (pilihan != 0) { printf("  [!] Tidak valid!\n"); pauseScreen(); }
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
+        switch (pilihan) {
+            case 1: lihatInfoAkunPasien(); break;
+            case 2: gantiCredentialPasien(); break;
+            case 0: break;
+            default:
+                printf("  [!] Tidak valid!\n");
+                system("pause");
+        }
     } while (pilihan != 0);
 }
 
@@ -319,20 +327,23 @@ void lihatDaftarDokter() {
                daftarDokter[i].nama,
                daftarDokter[i].spesialis);
     printLine('-', 60);
-    pauseScreen();
+    system("pause");
 }
 
 void cariDokter() {
     printHeader("CARI DOKTER");
     char keyword[MAX_STR];
-    getInputString("Nama / Spesialis", keyword);
+    printf("  Nama / Spesialis : ");
+    gets(keyword);
+
     printf("\n  Hasil Pencarian:\n");
     printLine('-', 60);
     printf("  %-4s %-25s %-20s\n", "ID", "Nama Dokter", "Spesialis");
     printLine('-', 60);
+    
     int ditemukan = 0;
     for (int i = 0; i < jumlahDokter; i++) {
-        if (strstr(daftarDokter[i].nama,      keyword) ||
+        if (strstr(daftarDokter[i].nama, keyword) ||
             strstr(daftarDokter[i].spesialis, keyword)) {
             printf("  %-4d %-25s %-20s\n",
                    daftarDokter[i].id,
@@ -343,7 +354,7 @@ void cariDokter() {
     }
     if (!ditemukan) printf("  Tidak ada dokter yang ditemukan.\n");
     printLine('-', 60);
-    pauseScreen();
+    system("pause");
 }
 
 void urutDokter() {
@@ -351,8 +362,11 @@ void urutDokter() {
     printf("  [1] Berdasarkan Nama (A-Z)\n");
     printf("  [2] Berdasarkan Spesialis (A-Z)\n");
     printLine('-', 60);
+    printf("  Pilihan : ");
     int pilihan;
-    getInputInt("Pilihan", &pilihan);
+    scanf("%d", &pilihan);
+    getchar();
+    
     Dokter temp;
     for (int i = 0; i < jumlahDokter - 1; i++) {
         for (int j = 0; j < jumlahDokter - 1 - i; j++) {
@@ -362,8 +376,18 @@ void urutDokter() {
             if (swap) { temp = daftarDokter[j]; daftarDokter[j] = daftarDokter[j+1]; daftarDokter[j+1] = temp; }
         }
     }
+    
     printf("\n  [+] Data berhasil diurutkan!\n\n");
-    lihatDaftarDokter();
+    printLine('-', 60);
+    printf("  %-4s %-25s %-20s\n", "ID", "Nama Dokter", "Spesialis");
+    printLine('-', 60);
+    for (int i = 0; i < jumlahDokter; i++)
+        printf("  %-4d %-25s %-20s\n",
+               daftarDokter[i].id,
+               daftarDokter[i].nama,
+               daftarDokter[i].spesialis);
+    printLine('-', 60);
+    system("pause");
 }
 
 void menuListDokter() {
@@ -375,46 +399,92 @@ void menuListDokter() {
         printf("  [3] Urutkan Data Dokter\n");
         printf("  [0] Kembali\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
-        if      (pilihan == 1) lihatDaftarDokter();
-        else if (pilihan == 2) cariDokter();
-        else if (pilihan == 3) urutDokter();
-        else if (pilihan != 0) { printf("  [!] Tidak valid!\n"); pauseScreen(); }
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
+        switch (pilihan) {
+            case 1: lihatDaftarDokter(); break;
+            case 2: cariDokter(); break;
+            case 3: urutDokter(); break;
+            case 0: break;
+            default:
+                printf("  [!] Tidak valid!\n");
+                system("pause");
+        }
     } while (pilihan != 0);
 }
 
 void buatReservasi() {
     printHeader("BUAT RESERVASI");
-    lihatDaftarDokter();
+
+    // Tampilkan daftar dokter inline
+    printLine('-', 60);
+    printf("  %-4s %-25s %-20s\n", "ID", "Nama Dokter", "Spesialis");
+    printLine('-', 60);
+    for (int i = 0; i < jumlahDokter; i++)
+        printf("  %-4d %-25s %-20s\n",
+               daftarDokter[i].id,
+               daftarDokter[i].nama,
+               daftarDokter[i].spesialis);
+    printLine('-', 60);
+
     int idDoc;
-    getInputInt("Pilih ID Dokter", &idDoc);
+    printf("  Pilih ID Dokter : ");
+    scanf("%d", &idDoc);
+    getchar();
+
     int idxDok = -1;
     for (int i = 0; i < jumlahDokter; i++)
         if (daftarDokter[i].id == idDoc) { idxDok = i; break; }
+    
     if (idxDok == -1) {
         printf("  [!] Dokter tidak ditemukan!\n");
-        pauseScreen(); return;
+        system("pause");
+        return;
     }
+    
     printf("\n  Jadwal tersedia: %s\n\n", daftarDokter[idxDok].jadwal);
+    
     Reservasi r;
     r.id        = jumlahReservasi + 1;
     r.id_pasien = daftarPasien[idPasienLogin].id;
     r.id_dokter = idDoc;
-    getInputString("Waktu Reservasi (contoh: Senin 08:00)", r.waktu);
+    
+    printf("  Waktu Reservasi (contoh: Senin 08:00) : ");
+    gets(r.waktu);
+
     strcpy(r.status, "Menunggu");
     daftarReservasi[jumlahReservasi++] = r;
-    simpanData();
+
+    FILE *fp = fopen(FILE_RESERVASI, "wb");
+    if (fp) {
+        fwrite(&jumlahReservasi, sizeof(int), 1, fp);
+        fwrite(daftarReservasi, sizeof(Reservasi), jumlahReservasi, fp);
+        fclose(fp);
+    }
+
     printf("\n  [+] Reservasi berhasil! Status: Menunggu konfirmasi dokter.\n");
-    pauseScreen();
+    system("pause");
 }
 
 void menuReservasiDokter() {
+    int pilihan;
     printHeader("RESERVASI DOKTER");
     printf("  [1] Buat Reservasi Baru\n");
     printf("  [0] Kembali\n");
     printLine('-', 60);
-    int p; getInputInt("Pilihan", &p);
-    if (p == 1) buatReservasi();
+    printf("  Pilihan : ");
+    scanf("%d", &pilihan);
+    getchar();
+
+    switch (pilihan) {
+        case 1: buatReservasi(); break;
+        case 0: break;
+        default:
+            printf("  [!] Pilihan tidak valid!\n");
+            system("pause");
+    }
 }
 
 void menuStatusReservasi() {
