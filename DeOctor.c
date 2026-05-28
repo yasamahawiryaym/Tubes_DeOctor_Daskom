@@ -145,76 +145,9 @@ void loadData() {
         fread(daftarFeedback, sizeof(Feedback), jumlahFeedback, f);
         fclose(f);
     }
-
-    return berhasil;
 }
 
-void inisialisasiData() {
-    jumlahDokter = 3;
-
-    daftarDokter[0].id = 1;
-    strcpy(daftarDokter[0].username,  "dokter1");
-    strcpy(daftarDokter[0].password,  "dokter123");
-    strcpy(daftarDokter[0].nama,      "Dr. Budi Santoso");
-    strcpy(daftarDokter[0].spesialis, "Umum");
-    strcpy(daftarDokter[0].jadwal,    "Senin 08:00, Rabu 13:00, Jumat 09:00");
-    daftarDokter[0].aktif = 1;
-
-    daftarDokter[1].id = 2;
-    strcpy(daftarDokter[1].username,  "dokter2");
-    strcpy(daftarDokter[1].password,  "dokter123");
-    strcpy(daftarDokter[1].nama,      "Dr. Siti Rahayu");
-    strcpy(daftarDokter[1].spesialis, "Spesialis Anak");
-    strcpy(daftarDokter[1].jadwal,    "Selasa 10:00, Kamis 14:00");
-    daftarDokter[1].aktif = 1;
-
-    daftarDokter[2].id = 3;
-    strcpy(daftarDokter[2].username,  "dokter3");
-    strcpy(daftarDokter[2].password,  "dokter123");
-    strcpy(daftarDokter[2].nama,      "Dr. Ahmad Fauzi");
-    strcpy(daftarDokter[2].spesialis, "Kardiologi");
-    strcpy(daftarDokter[2].jadwal,    "Senin 13:00, Kamis 09:00");
-    daftarDokter[2].aktif = 1;
-
-    jumlahPasien = 2;
-
-    daftarPasien[0].id = 1;
-    strcpy(daftarPasien[0].username, "pasien1");
-    strcpy(daftarPasien[0].password, "pasien123");
-    strcpy(daftarPasien[0].nama,     "Andi Wijaya");
-    strcpy(daftarPasien[0].email,    "andi@email.com");
-    strcpy(daftarPasien[0].telepon,  "081234567890");
-    daftarPasien[0].aktif = 1;
-
-    daftarPasien[1].id = 2;
-    strcpy(daftarPasien[1].username, "pasien2");
-    strcpy(daftarPasien[1].password, "pasien123");
-    strcpy(daftarPasien[1].nama,     "Rina Susanti");
-    strcpy(daftarPasien[1].email,    "rina@email.com");
-    strcpy(daftarPasien[1].telepon,  "089876543210");
-    daftarPasien[1].aktif = 1;
-
-    jumlahReservasi = 1;
-    daftarReservasi[0].id        = 1;
-    daftarReservasi[0].id_pasien = 1;
-    daftarReservasi[0].id_dokter = 1;
-    strcpy(daftarReservasi[0].waktu,  "Senin 08:00");
-    strcpy(daftarReservasi[0].status, "Diterima");
-
-    jumlahResep = 1;
-    daftarResep[0].id           = 1;
-    daftarResep[0].id_pasien    = 1;
-    daftarResep[0].id_dokter    = 1;
-    daftarResep[0].id_reservasi = 1;
-    strcpy(daftarResep[0].obat,        "Paracetamol 500mg");
-    strcpy(daftarResep[0].dosis,       "3x sehari sesudah makan");
-    strcpy(daftarResep[0].keterangan,  "Untuk demam dan nyeri kepala");
-    strcpy(daftarResep[0].tanggal,     "2024-01-15");
-
-    // Simpan seed data ke file .dat
-    simpanData();
-}
-
+//===== MENU FORWARD DECLARATIONS =====
 void menuUtama();
 void menuPasien();
 void menuDokter();
@@ -223,94 +156,76 @@ void menuRegistrasiPasien() {
     printHeader("REGISTRASI PASIEN");
     if (jumlahPasien >= MAX_PASIEN) {
         printf("  [!] Kapasitas pasien penuh!\n");
-        pauseScreen(); return;
+        system("pause");
+        return;
     }
+    
     Pasien p;
     p.id = jumlahPasien + 1;
     printf("  Isi data berikut:\n\n");
-    getInputString("Nama Lengkap", p.nama);
-    getInputString("Username",     p.username);
+
+    printf("  Nama Lengkap : ");
+    gets(p.nama);
+
+    printf("  Username     : ");
+    gets(p.username);
+
     for (int i = 0; i < jumlahPasien; i++) {
         if (strcmp(daftarPasien[i].username, p.username) == 0) {
             printf("\n  [!] Username sudah digunakan!\n");
-            pauseScreen(); return;
+            system("pause");
+            return;
         }
     }
-    getInputString("Password",   p.password);
-    getInputString("Email",      p.email);
-    getInputString("No. Telepon",p.telepon);
+    printf("  Password     : ");
+    gets(p.password);
+
+    printf("  Email        : ");
+    gets(p.email);
+
+    printf("  No. Telepon  : ");
+    gets(p.telepon);
+
     p.aktif = 1;
     daftarPasien[jumlahPasien++] = p;
-    simpanData();
+
+    FILE *fp = fopen(FILE_PASIEN, "wb");
+    if (fp) {
+        fwrite(&jumlahPasien, sizeof(int), 1, fp);
+        fwrite(daftarPasien, sizeof(Pasien), jumlahPasien, fp);
+        fclose(fp);
+    }
+
     printf("\n  [+] Registrasi berhasil! Silakan login.\n");
-    pauseScreen();
+    system("pause");
 }
 
-// Login Pasien - While Loop (3x kesempatan)
 int loginPasien() {
     printHeader("LOGIN PASIEN");
     printf("  Anda memiliki 3x kesempatan login.\n\n");
+    
     int attempts = 0;
     char username[MAX_STR], password[MAX_STR];
 
     while (attempts < MAX_LOGIN_ATTEMPTS) {
         printf("  Percobaan ke-%d:\n", attempts + 1);
-        getInputString("Username", username);
-        getInputString("Password", password);
+
+        printf("  Username : ");
+        gets(username);
+
+        printf("  Password : ");
+        gets(password);
+
         for (int i = 0; i < jumlahPasien; i++) {
             if (strcmp(daftarPasien[i].username, username) == 0 &&
                 strcmp(daftarPasien[i].password, password) == 0 &&
                 daftarPasien[i].aktif == 1) {
                 idPasienLogin = i;
-                printf("\n  [+] Login berhasil! Selamat datang, %s!\n",
-                       daftarPasien[i].nama);
-                pauseScreen();
+                printf("\n  [+] Login berhasil! Selamat datang, %s!\n", daftarPasien[i].nama);
+                system("pause");
                 return 1;
             }
         }
-        attempts++;
-        if (attempts < MAX_LOGIN_ATTEMPTS)
-            printf("  [!] Salah! Sisa %d percobaan.\n\n",
-                   MAX_LOGIN_ATTEMPTS - attempts);
-    }
-    printf("\n  [!] Login gagal! Akun diblokir sementara.\n");
-    pauseScreen();
-    return 0;
-}
-
-void menuRegistrasiDokter() {
-    printHeader("REGISTRASI DOKTER");
-    if (jumlahDokter >= MAX_DOKTER) {
-        printf("  [!] Kapasitas dokter penuh!\n");
-        pauseScreen(); return;
-    }
-    Dokter d;
-    d.id = jumlahDokter + 1;
-    printf("  Isi data berikut:\n\n");
-    getInputString("Nama Lengkap (beserta gelar)", d.nama);
-    getInputString("Spesialis",   d.spesialis);
-    getInputString("Username",    d.username);
-    for (int i = 0; i < jumlahDokter; i++) {
-        if (strcmp(daftarDokter[i].username, d.username) == 0) {
-            printf("\n  [!] Username sudah digunakan!\n");
-            pauseScreen(); return;
-        }
-    }
-    getInputString("Password",       d.password);
-    getInputString("Jadwal Praktek", d.jadwal);
-    d.aktif = 1;
-    daftarDokter[jumlahDokter++] = d;
-    simpanData();
-    printf("\n  [+] Registrasi dokter berhasil! Silakan login.\n");
-    pauseScreen();
-}
-
-// Login Dokter - Do-While Loop (3x kesempatan)
-int loginDokter() {
-    printHeader("LOGIN DOKTER");
-    printf("  Anda memiliki 3x kesempatan login.\n\n");
-    int attempts = 0;
-    char username[MAX_STR], password[MAX_STR];
 
     do {
         printf("  Percobaan ke-%d:\n", attempts + 1);
