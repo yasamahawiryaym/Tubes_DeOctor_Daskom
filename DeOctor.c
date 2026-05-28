@@ -84,27 +84,13 @@ int jumlahFeedback  = 0;
 int idPasienLogin = -1;
 int idDokterLogin = -1;
 
-void clearScreen() {
-#ifdef _WIN32
-    system("cls");
-#else
-    system("clear");
-#endif
-}
-
-void pauseScreen() {
-    printf("\n  Tekan Enter untuk melanjutkan...");
-    while (getchar() != '\n');
-    getchar();
-}
-
 void printLine(char c, int len) {
     for (int i = 0; i < len; i++) putchar(c);
     putchar('\n');
 }
 
 void printHeader(const char* judul) {
-    clearScreen();
+    system("cls");
     printLine('=', 60);
     printf("  DeOctor - Sistem Informasi Dokter\n");
     printLine('=', 60);
