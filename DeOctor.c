@@ -227,29 +227,13 @@ int loginPasien() {
             }
         }
 
-    do {
-        printf("  Percobaan ke-%d:\n", attempts + 1);
-        getInputString("Username", username);
-        getInputString("Password", password);
-        for (int i = 0; i < jumlahDokter; i++) {
-            if (strcmp(daftarDokter[i].username, username) == 0 &&
-                strcmp(daftarDokter[i].password, password) == 0 &&
-                daftarDokter[i].aktif == 1) {
-                idDokterLogin = i;
-                printf("\n  [+] Login berhasil! Selamat datang, %s!\n",
-                       daftarDokter[i].nama);
-                pauseScreen();
-                return 1;
-            }
-        }
         attempts++;
         if (attempts < MAX_LOGIN_ATTEMPTS)
-            printf("  [!] Salah! Sisa %d percobaan.\n\n",
-                   MAX_LOGIN_ATTEMPTS - attempts);
-    } while (attempts < MAX_LOGIN_ATTEMPTS);
+                        printf("  [!] Salah! Sisa %d percobaan.\n\n", MAX_LOGIN_ATTEMPTS - attempts);
+    }
 
     printf("\n  [!] Login gagal! Akun diblokir sementara.\n");
-    pauseScreen();
+   system("pause");
     return 0;
 }
 
@@ -264,32 +248,49 @@ void lihatInfoAkunPasien() {
     printf("  Telepon    : %s\n",  p->telepon);
     printf("  Status     : %s\n",  p->aktif ? "Aktif" : "Nonaktif");
     printLine('-', 60);
-    pauseScreen();
+   system("pause");
 }
 
 void gantiCredentialPasien() {
     printHeader("GANTI USERNAME & PASSWORD");
     Pasien* p = &daftarPasien[idPasienLogin];
     char newUser[MAX_STR], newPass[MAX_STR], confirm[MAX_STR];
-    getInputString("Username Baru", newUser);
+
+    printf("  Username Baru        : ");
+    gets(newUser);
+
     for (int i = 0; i < jumlahPasien; i++) {
-        if (i != idPasienLogin &&
-            strcmp(daftarPasien[i].username, newUser) == 0) {
+        if (i != idPasienLogin && strcmp(daftarPasien[i].username, newUser) == 0) {
             printf("\n  [!] Username sudah digunakan!\n");
-            pauseScreen(); return;
+            system("pause");
+            return;
         }
     }
-    getInputString("Password Baru",      newPass);
-    getInputString("Konfirmasi Password", confirm);
+    
+    printf("  Password Baru        : ");
+    gets(newPass);
+
+    printf("  Konfirmasi Password  : ");
+    gets(confirm);
+
     if (strcmp(newPass, confirm) != 0) {
         printf("\n  [!] Password tidak cocok!\n");
-        pauseScreen(); return;
+        system("pause");
+        return;
     }
+    
     strcpy(p->username, newUser);
     strcpy(p->password, newPass);
-    simpanData();
+    
+    FILE *fp = fopen(FILE_PASIEN, "wb");
+    if (fp) {
+        fwrite(&jumlahPasien, sizeof(int), 1, fp);
+        fwrite(daftarPasien, sizeof(Pasien), jumlahPasien, fp);
+        fclose(fp);
+    }
+
     printf("\n  [+] Berhasil diperbarui!\n");
-    pauseScreen();
+    system("pause");
 }
 
 void manajemenAkunPasien() {
