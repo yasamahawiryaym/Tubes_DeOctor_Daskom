@@ -493,6 +493,7 @@ void menuStatusReservasi() {
     printLine('-', 70);
     printf("  %-4s %-22s %-18s %-12s\n", "ID", "Dokter", "Waktu", "Status");
     printLine('-', 70);
+    
     int ada = 0;
     for (int i = 0; i < jumlahReservasi; i++) {
         if (daftarReservasi[i].id_pasien == myId) {
@@ -506,15 +507,17 @@ void menuStatusReservasi() {
             ada = 1;
         }
     }
+    
     if (!ada) printf("  Belum ada reservasi.\n");
     printLine('-', 70);
-    pauseScreen();
+    system("pause");
 }
 
 void lihatResepPasien() {
     printHeader("DAFTAR RESEP OBAT");
     int myId = daftarPasien[idPasienLogin].id;
     printLine('-', 60);
+    
     int ada = 0;
     for (int i = 0; i < jumlahResep; i++) {
         if (daftarResep[i].id_pasien == myId) {
@@ -533,20 +536,22 @@ void lihatResepPasien() {
         }
     }
     if (!ada) printf("  Belum ada resep.\n");
-    pauseScreen();
+    system("pause");
 }
 
 void cariResepPasien() {
     printHeader("CARI RESEP OBAT");
     int myId = daftarPasien[idPasienLogin].id;
     char keyword[MAX_STR];
-    getInputString("Nama Obat", keyword);
+    
+    printf("  Nama Obat : ");
+    gets(keyword);
+
     printf("\n  Hasil Pencarian:\n");
     printLine('-', 60);
     int ditemukan = 0;
     for (int i = 0; i < jumlahResep; i++) {
-        if (daftarResep[i].id_pasien == myId &&
-            strstr(daftarResep[i].obat, keyword)) {
+       if (daftarResep[i].id_pasien == myId && strstr(daftarResep[i].obat, keyword)) {
             printf("  [%d] %s - %s\n",
                    daftarResep[i].id,
                    daftarResep[i].obat,
@@ -556,7 +561,7 @@ void cariResepPasien() {
     }
     if (!ditemukan) printf("  Tidak ditemukan.\n");
     printLine('-', 60);
-    pauseScreen();
+    system("pause");
 }
 
 void menuResepPasien() {
@@ -567,39 +572,74 @@ void menuResepPasien() {
         printf("  [2] Cari Resep\n");
         printf("  [0] Kembali\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
-        if      (pilihan == 1) lihatResepPasien();
-        else if (pilihan == 2) cariResepPasien();
-        else if (pilihan != 0) { printf("  [!] Tidak valid!\n"); pauseScreen(); }
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
+        switch (pilihan) {
+            case 1: lihatResepPasien(); break;
+            case 2: cariResepPasien(); break;
+            case 0: break;
+            default:
+                printf("  [!] Tidak valid!\n");
+                system("pause");
+        }
     } while (pilihan != 0);
 }
 
 void beriFeedback() {
     printHeader("BERIKAN FEEDBACK");
-    lihatDaftarDokter();
+    printLine('-', 60);
+    printf("  %-4s %-25s %-20s\n", "ID", "Nama Dokter", "Spesialis");
+    printLine('-', 60);
+    for (int i = 0; i < jumlahDokter; i++)
+        printf("  %-4d %-25s %-20s\n",
+               daftarDokter[i].id,
+               daftarDokter[i].nama,
+               daftarDokter[i].spesialis);
+    printLine('-', 60);
+
     int idDoc;
-    getInputInt("Pilih ID Dokter", &idDoc);
+    printf("  Pilih ID Dokter : ");
+    scanf("%d", &idDoc);
+    getchar();
+
     int idxDok = -1;
     for (int i = 0; i < jumlahDokter; i++)
         if (daftarDokter[i].id == idDoc) { idxDok = i; break; }
+    
     if (idxDok == -1) {
         printf("  [!] Dokter tidak ditemukan!\n");
-        pauseScreen(); return;
+        system("pause");
+        return;
     }
+    
     Feedback f;
     f.id        = jumlahFeedback + 1;
     f.id_pasien = daftarPasien[idPasienLogin].id;
     f.id_dokter = idDoc;
     strcpy(f.tanggal, getCurrentDate());
-    getInputString("Tulis feedback Anda", f.isi);
+
+    printf("  Tulis feedback Anda : ");
+    gets(f.isi);
+
     do {
-        getInputInt("Rating (1-5)", &f.rating);
+        printf("  Rating (1-5) : ");
+        scanf("%d", &f.rating);
+        getchar();
         if (f.rating < 1 || f.rating > 5) printf("  [!] Rating harus 1-5!\n");
     } while (f.rating < 1 || f.rating > 5);
     daftarFeedback[jumlahFeedback++] = f;
-    simpanData();
+
+    FILE *fp = fopen(FILE_FEEDBACK, "wb");
+    if (fp) {
+        fwrite(&jumlahFeedback, sizeof(int), 1, fp);
+        fwrite(daftarFeedback, sizeof(Feedback), jumlahFeedback, fp);
+        fclose(fp);
+    }
+
     printf("\n  [+] Feedback berhasil dikirim!\n");
-    pauseScreen();
+    system("pause");
 }
 
 void lihatHistoryFeedback() {
