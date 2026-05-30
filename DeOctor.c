@@ -646,6 +646,7 @@ void lihatHistoryFeedback() {
     printHeader("HISTORY FEEDBACK");
     int myId = daftarPasien[idPasienLogin].id;
     printLine('-', 60);
+    
     int ada = 0;
     for (int i = 0; i < jumlahFeedback; i++) {
         if (daftarFeedback[i].id_pasien == myId) {
@@ -664,7 +665,7 @@ void lihatHistoryFeedback() {
         }
     }
     if (!ada) printf("  Belum ada feedback.\n");
-    pauseScreen();
+    system("pause");
 }
 
 void menuFeedback() {
@@ -675,10 +676,18 @@ void menuFeedback() {
         printf("  [2] Lihat History Feedback\n");
         printf("  [0] Kembali\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
-        if      (pilihan == 1) beriFeedback();
-        else if (pilihan == 2) lihatHistoryFeedback();
-        else if (pilihan != 0) { printf("  [!] Tidak valid!\n"); pauseScreen(); }
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
+        switch (pilihan) {
+            case 1: beriFeedback(); break;
+            case 2: lihatHistoryFeedback(); break;
+            case 0: break;
+            default:
+                printf("  [!] Tidak valid!\n");
+                system("pause");
+        }
     } while (pilihan != 0);
 }
 
@@ -695,23 +704,114 @@ void menuPasien() {
         printf("  [6] Feedback\n");
         printf("  [0] Logout\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
         switch (pilihan) {
-            case 1: manajemenAkunPasien();  break;
-            case 2: menuListDokter();       break;
-            case 3: menuReservasiDokter();  break;
-            case 4: menuStatusReservasi();  break;
-            case 5: menuResepPasien();      break;
-            case 6: menuFeedback();         break;
+            case 1: manajemenAkunPasien(); break;
+            case 2: menuListDokter(); break;
+            case 3: menuReservasiDokter(); break;
+            case 4: menuStatusReservasi(); break;
+            case 5: menuResepPasien(); break;
+            case 6: menuFeedback(); break;
             case 0:
                 printf("\n  [+] Logout berhasil.\n");
                 idPasienLogin = -1;
-                pauseScreen(); return;
+                system("pause");
+                return;
             default:
                 printf("  [!] Pilihan tidak valid!\n");
-                pauseScreen();
+                system("pause");
         }
     } while (1);
+}
+
+void menuRegistrasiDokter() {
+    printHeader("REGISTRASI DOKTER");
+    if (jumlahDokter >= MAX_DOKTER) {
+        printf("  [!] Kapasitas dokter penuh!\n");
+        system("pause");
+        return;
+    }
+
+    Dokter d;
+    d.id = jumlahDokter + 1;
+    printf("  Isi data berikut:\n\n");
+
+    printf("  Nama Lengkap (beserta gelar) : ");
+    gets(d.nama);
+
+    printf("  Spesialis                    : ");
+    gets(d.spesialis);
+
+    printf("  Username                     : ");
+    gets(d.username);
+
+    for (int i = 0; i < jumlahDokter; i++) {
+        if (strcmp(daftarDokter[i].username, d.username) == 0) {
+            printf("\n  [!] Username sudah digunakan!\n");
+            system("pause");
+            return;
+        }
+    }
+
+    printf("  Password                     : ");
+    gets(d.password);
+
+    printf("  Jadwal Praktek               : ");
+    gets(d.jadwal);
+
+    d.aktif = 1;
+    daftarDokter[jumlahDokter++] = d;
+
+    FILE *fp = fopen(FILE_DOKTER, "wb");
+    if (fp) {
+        fwrite(&jumlahDokter, sizeof(int), 1, fp);
+        fwrite(daftarDokter, sizeof(Dokter), jumlahDokter, fp);
+        fclose(fp);
+    }
+
+    printf("\n  [+] Registrasi dokter berhasil! Silakan login.\n");
+    system("pause");
+}
+
+int loginDokter() {
+    printHeader("LOGIN DOKTER");
+    printf("  Anda memiliki 3x kesempatan login.\n\n");
+
+    int attempts = 0;
+    char username[MAX_STR], password[MAX_STR];
+
+    do {
+        printf("  Percobaan ke-%d:\n", attempts + 1);
+
+        printf("  Username : ");
+        gets(username);
+
+        printf("  Password : ");
+        gets(password);
+
+        for (int i = 0; i < jumlahDokter; i++) {
+            if (strcmp(daftarDokter[i].username, username) == 0 &&
+                strcmp(daftarDokter[i].password, password) == 0 &&
+                daftarDokter[i].aktif == 1) {
+                idDokterLogin = i;
+                printf("\n  [+] Login berhasil! Selamat datang, %s!\n", daftarDokter[i].nama);
+                system("pause");
+                return 1;
+            }
+        }
+
+        attempts++;
+        if (attempts < MAX_LOGIN_ATTEMPTS)
+            printf("  [!] Salah! Sisa %d percobaan.\n\n", MAX_LOGIN_ATTEMPTS - attempts);
+
+    } while (attempts < MAX_LOGIN_ATTEMPTS);
+
+    printf("\n  [!] Login gagal! Akun diblokir sementara.\n");
+    system("pause");
+    return 0;
 }
 
 void lihatInfoAkunDokter() {
@@ -725,32 +825,49 @@ void lihatInfoAkunDokter() {
     printf("  Jadwal     : %s\n", d->jadwal);
     printf("  Status     : %s\n", d->aktif ? "Aktif" : "Nonaktif");
     printLine('-', 60);
-    pauseScreen();
+    system("pause");
 }
 
 void gantiCredentialDokter() {
     printHeader("GANTI USERNAME & PASSWORD");
     Dokter* d = &daftarDokter[idDokterLogin];
     char newUser[MAX_STR], newPass[MAX_STR], confirm[MAX_STR];
-    getInputString("Username Baru", newUser);
+
+    printf("  Username Baru        : ");
+    gets(newUser);
+
     for (int i = 0; i < jumlahDokter; i++) {
-        if (i != idDokterLogin &&
-            strcmp(daftarDokter[i].username, newUser) == 0) {
+        if (i != idDokterLogin && strcmp(daftarDokter[i].username, newUser) == 0) {
             printf("\n  [!] Username sudah digunakan!\n");
-            pauseScreen(); return;
+            system("pause");
+            return;
         }
     }
-    getInputString("Password Baru",       newPass);
-    getInputString("Konfirmasi Password", confirm);
+
+    printf("  Password Baru        : ");
+    gets(newPass);
+
+    printf("  Konfirmasi Password  : ");
+    gets(confirm);
+
     if (strcmp(newPass, confirm) != 0) {
         printf("\n  [!] Password tidak cocok!\n");
-        pauseScreen(); return;
+        system("pause");
+        return;
     }
+    
     strcpy(d->username, newUser);
     strcpy(d->password, newPass);
-    simpanData();
+    
+    FILE *fp = fopen(FILE_DOKTER, "wb");
+    if (fp) {
+        fwrite(&jumlahDokter, sizeof(int), 1, fp);
+        fwrite(daftarDokter, sizeof(Dokter), jumlahDokter, fp);
+        fclose(fp);
+    }
+
     printf("\n  [+] Berhasil diperbarui!\n");
-    pauseScreen();
+    system("pause");
 }
 
 void manajemenAkunDokter() {
@@ -761,15 +878,48 @@ void manajemenAkunDokter() {
         printf("  [2] Ganti Username dan Password\n");
         printf("  [0] Kembali\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
-        if      (pilihan == 1) lihatInfoAkunDokter();
-        else if (pilihan == 2) gantiCredentialDokter();
-        else if (pilihan != 0) { printf("  [!] Tidak valid!\n"); pauseScreen(); }
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
+        switch (pilihan) {
+            case 1: lihatInfoAkunDokter(); break;
+            case 2: gantiCredentialDokter(); break;
+            case 0: break;
+            default:
+                printf("  [!] Tidak valid!\n");
+                system("pause");
+        }
     } while (pilihan != 0);
 }
 
 void lihatDaftarReservasi() {
     printHeader("DAFTAR RESERVASI PASIEN");
+    int myId = daftarDokter[idDokterLogin].id;
+    printLine('-', 70);
+    printf("  %-4s %-25s %-18s %-12s\n", "ID", "Nama Pasien", "Waktu", "Status");
+    printLine('-', 70);
+    
+    int ada = 0;
+    for (int i = 0; i < jumlahReservasi; i++) {
+        if (daftarReservasi[i].id_dokter == myId) {
+            char namaPas[MAX_STR] = "?";
+            for (int j = 0; j < jumlahPasien; j++)
+                if (daftarPasien[j].id == daftarReservasi[i].id_pasien)
+                    { strcpy(namaPas, daftarPasien[j].nama); break; }
+            printf("  %-4d %-25s %-18s %-12s\n",
+                   daftarReservasi[i].id, namaPas,
+                   daftarReservasi[i].waktu, daftarReservasi[i].status);
+            ada = 1;
+        }
+    }
+    if (!ada) printf("  Tidak ada reservasi.\n");
+    printLine('-', 70);
+    system("pause");
+}
+
+void prosesReservasi() {
+    printHeader("PROSES RESERVASI");
     int myId = daftarDokter[idDokterLogin].id;
     printLine('-', 70);
     printf("  %-4s %-25s %-18s %-12s\n", "ID", "Nama Pasien", "Waktu", "Status");
@@ -787,33 +937,56 @@ void lihatDaftarReservasi() {
             ada = 1;
         }
     }
-    if (!ada) printf("  Tidak ada reservasi.\n");
+    if (!ada) { printf("  Tidak ada reservasi.\n"); printLine('-', 70); system("pause"); return; }
     printLine('-', 70);
-    pauseScreen();
-}
 
-void prosesReservasi() {
-    printHeader("PROSES RESERVASI");
-    lihatDaftarReservasi();
     int idRes;
-    getInputInt("ID Reservasi yang diproses", &idRes);
+    printf("  ID Reservasi yang diproses : ");
+    scanf("%d", &idRes);
+    getchar();
+
     int idx = -1;
     for (int i = 0; i < jumlahReservasi; i++)
         if (daftarReservasi[i].id == idRes &&
             daftarReservasi[i].id_dokter == daftarDokter[idDokterLogin].id)
             { idx = i; break; }
+    
     if (idx == -1) {
         printf("  [!] Reservasi tidak ditemukan!\n");
-        pauseScreen(); return;
+        system("pause");
+        return;
     }
+    
     printf("\n  Status saat ini: %s\n", daftarReservasi[idx].status);
     printf("  [1] Terima\n  [2] Tolak\n");
-    int aksi; getInputInt("Pilihan", &aksi);
-    if      (aksi == 1) { strcpy(daftarReservasi[idx].status, "Diterima"); printf("\n  [+] Reservasi diterima!\n"); }
-    else if (aksi == 2) { strcpy(daftarReservasi[idx].status, "Ditolak");  printf("\n  [+] Reservasi ditolak!\n"); }
-    else { printf("  [!] Pilihan tidak valid!\n"); pauseScreen(); return; }
-    simpanData();
-    pauseScreen();
+    printf("  Pilihan : ");
+    int aksi;
+    scanf("%d", &aksi);
+    getchar();
+
+    switch (aksi) {
+        case 1:
+            strcpy(daftarReservasi[idx].status, "Diterima");
+            printf("\n  [+] Reservasi diterima!\n");
+            break;
+        case 2:
+            strcpy(daftarReservasi[idx].status, "Ditolak");
+            printf("\n  [+] Reservasi ditolak!\n");
+            break;
+        default:
+            printf("  [!] Pilihan tidak valid!\n");
+            system("pause");
+            return;
+    }
+
+    FILE *fp = fopen(FILE_RESERVASI, "wb");
+    if (fp) {
+        fwrite(&jumlahReservasi, sizeof(int), 1, fp);
+        fwrite(daftarReservasi, sizeof(Reservasi), jumlahReservasi, fp);
+        fclose(fp);
+    }
+
+    system("pause");
 }
 
 void menuReservasiPasien() {
@@ -824,10 +997,18 @@ void menuReservasiPasien() {
         printf("  [2] Terima / Tolak Reservasi\n");
         printf("  [0] Kembali\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
-        if      (pilihan == 1) lihatDaftarReservasi();
-        else if (pilihan == 2) prosesReservasi();
-        else if (pilihan != 0) { printf("  [!] Tidak valid!\n"); pauseScreen(); }
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
+        switch (pilihan) {
+            case 1: lihatDaftarReservasi(); break;
+            case 2: prosesReservasi(); break;
+            case 0: break;
+            default:
+                printf("  [!] Tidak valid!\n");
+                system("pause");
+        }
     } while (pilihan != 0);
 }
 
@@ -837,6 +1018,7 @@ void lihatRiwayatPasien() {
     printLine('-', 65);
     printf("  %-6s %-25s %-15s\n", "Res#", "Nama Pasien", "Telepon");
     printLine('-', 65);
+    
     int ada = 0;
     for (int i = 0; i < jumlahReservasi; i++) {
         if (daftarReservasi[i].id_dokter == myId &&
@@ -848,14 +1030,13 @@ void lihatRiwayatPasien() {
                     strcpy(telpPas, daftarPasien[j].telepon);
                     break;
                 }
-            printf("  %-6d %-25s %-15s\n",
-                   daftarReservasi[i].id, namaPas, telpPas);
+            printf("  %-6d %-25s %-15s\n", daftarReservasi[i].id, namaPas, telpPas);
             ada = 1;
         }
     }
     if (!ada) printf("  Belum ada riwayat pasien.\n");
     printLine('-', 65);
-    pauseScreen();
+    system("pause");
 }
 
 void urutDataPasien() {
@@ -863,7 +1044,11 @@ void urutDataPasien() {
     printf("  [1] Berdasarkan Nama (A-Z)\n");
     printf("  [2] Berdasarkan ID\n");
     printLine('-', 60);
-    int pilihan; getInputInt("Pilihan", &pilihan);
+    printf("  Pilihan : ");
+    int pilihan;
+    scanf("%d", &pilihan);
+    getchar();
+
     Pasien temp;
     for (int i = 0; i < jumlahPasien - 1; i++) {
         for (int j = 0; j < jumlahPasien - 1 - i; j++) {
@@ -881,7 +1066,7 @@ void urutDataPasien() {
         printf("  %-4d %-25s %-15s\n",
                daftarPasien[i].id, daftarPasien[i].nama, daftarPasien[i].telepon);
     printLine('-', 60);
-    pauseScreen();
+    system("pause");
 }
 
 void menuHistoryPasien() {
@@ -892,20 +1077,30 @@ void menuHistoryPasien() {
         printf("  [2] Urutkan Data Pasien\n");
         printf("  [0] Kembali\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
-        if      (pilihan == 1) lihatRiwayatPasien();
-        else if (pilihan == 2) urutDataPasien();
-        else if (pilihan != 0) { printf("  [!] Tidak valid!\n"); pauseScreen(); }
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
+        switch (pilihan) {
+            case 1: lihatRiwayatPasien(); break;
+            case 2: urutDataPasien(); break;
+            case 0: break;
+            default:
+                printf("  [!] Tidak valid!\n");
+                system("pause");
+        }
     } while (pilihan != 0);
 }
 
 void buatResep() {
     printHeader("BUAT RESEP OBAT");
     int myId = daftarDokter[idDokterLogin].id;
+    
     printf("  Pilih pasien dari reservasi yang diterima:\n\n");
     printLine('-', 65);
     printf("  %-6s %-25s %-15s\n", "ID Res", "Nama Pasien", "Waktu");
     printLine('-', 65);
+    
     int ada = 0;
     for (int i = 0; i < jumlahReservasi; i++) {
         if (daftarReservasi[i].id_dokter == myId &&
@@ -919,33 +1114,54 @@ void buatResep() {
             ada = 1;
         }
     }
+    
     if (!ada) {
         printf("  Tidak ada pasien yang bisa diberi resep.\n");
-        pauseScreen(); return;
+        system("pause");
+        return;
     }
     printLine('-', 65);
-    int idRes; getInputInt("ID Reservasi", &idRes);
+    int idRes;
+    printf("  ID Reservasi : ");
+    scanf("%d", &idRes);
+    getchar();
+
     int idxRes = -1;
     for (int i = 0; i < jumlahReservasi; i++)
         if (daftarReservasi[i].id == idRes && daftarReservasi[i].id_dokter == myId)
             { idxRes = i; break; }
+    
     if (idxRes == -1) {
         printf("  [!] Reservasi tidak valid!\n");
-        pauseScreen(); return;
+        system("pause");
+        return;
     }
+    
     Resep r;
     r.id           = jumlahResep + 1;
     r.id_pasien    = daftarReservasi[idxRes].id_pasien;
     r.id_dokter    = myId;
     r.id_reservasi = idRes;
     strcpy(r.tanggal, getCurrentDate());
-    getInputString("Nama Obat",    r.obat);
-    getInputString("Dosis",        r.dosis);
-    getInputString("Keterangan",   r.keterangan);
+    printf("  Nama Obat   : ");
+    gets(r.obat);
+
+    printf("  Dosis       : ");
+    gets(r.dosis);
+
+    printf("  Keterangan  : ");
+    gets(r.keterangan);
+
     daftarResep[jumlahResep++] = r;
-    simpanData();
+    FILE *fp = fopen(FILE_RESEP, "wb");
+    if (fp) {
+        fwrite(&jumlahResep, sizeof(int), 1, fp);
+        fwrite(daftarResep, sizeof(Resep), jumlahResep, fp);
+        fclose(fp);
+    }
+
     printf("\n  [+] Resep berhasil disimpan!\n");
-    pauseScreen();
+    system("pause");
 }
 
 void menuResepDokter() {
@@ -956,32 +1172,41 @@ void menuResepDokter() {
         printf("  [2] Lihat Semua Resep\n");
         printf("  [0] Kembali\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
-        if (pilihan == 1) {
-            buatResep();
-        } else if (pilihan == 2) {
-            printHeader("RESEP YANG DIBUAT");
-            int myId = daftarDokter[idDokterLogin].id;
-            printLine('-', 65);
-            int ada = 0;
-            for (int i = 0; i < jumlahResep; i++) {
-                if (daftarResep[i].id_dokter == myId) {
-                    char namaPas[MAX_STR] = "?";
-                    for (int j = 0; j < jumlahPasien; j++)
-                        if (daftarPasien[j].id == daftarResep[i].id_pasien)
-                            { strcpy(namaPas, daftarPasien[j].nama); break; }
-                    printf("  Resep #%-3d | Pasien: %-20s | Obat: %s\n",
-                           daftarResep[i].id, namaPas, daftarResep[i].obat);
-                    printf("  Dosis: %-30s | Tgl: %s\n",
-                           daftarResep[i].dosis, daftarResep[i].tanggal);
-                    printLine('-', 65);
-                    ada = 1;
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
+        switch (pilihan) {
+            case 1:
+                buatResep();
+                break;
+            case 2: {
+                printHeader("RESEP YANG DIBUAT");
+                int myId = daftarDokter[idDokterLogin].id;
+                printLine('-', 65);
+                int ada = 0;
+                for (int i = 0; i < jumlahResep; i++) {
+                    if (daftarResep[i].id_dokter == myId) {
+                        char namaPas[MAX_STR] = "?";
+                        for (int j = 0; j < jumlahPasien; j++)
+                            if (daftarPasien[j].id == daftarResep[i].id_pasien)
+                                { strcpy(namaPas, daftarPasien[j].nama); break; }
+                        printf("  Resep #%-3d | Pasien: %-20s | Obat: %s\n",
+                               daftarResep[i].id, namaPas, daftarResep[i].obat);
+                        printf("  Dosis: %-30s | Tgl: %s\n",
+                               daftarResep[i].dosis, daftarResep[i].tanggal);
+                        printLine('-', 65);
+                        ada = 1;
+                    }
                 }
+                if (!ada) printf("  Belum ada resep.\n");
+                system("pause");
+                break;
             }
-            if (!ada) printf("  Belum ada resep.\n");
-            pauseScreen();
-        } else if (pilihan != 0) {
-            printf("  [!] Tidak valid!\n"); pauseScreen();
+            case 0: break;
+            default:
+                printf("  [!] Tidak valid!\n");
+                system("pause");
         }
     } while (pilihan != 0);
 }
@@ -990,6 +1215,7 @@ void menuFeedbackDokter() {
     printHeader("FEEDBACK DARI PASIEN");
     int myId = daftarDokter[idDokterLogin].id;
     printLine('-', 60);
+    
     int ada = 0;
     for (int i = 0; i < jumlahFeedback; i++) {
         if (daftarFeedback[i].id_dokter == myId) {
@@ -1008,7 +1234,7 @@ void menuFeedbackDokter() {
         }
     }
     if (!ada) printf("  Belum ada feedback dari pasien.\n");
-    pauseScreen();
+    system("pause");
 }
 
 void menuDokter() {
@@ -1023,20 +1249,24 @@ void menuDokter() {
         printf("  [5] Feedback Pasien\n");
         printf("  [0] Logout\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
         switch (pilihan) {
-            case 1: manajemenAkunDokter();  break;
-            case 2: menuReservasiPasien();  break;
-            case 3: menuHistoryPasien();    break;
-            case 4: menuResepDokter();      break;
-            case 5: menuFeedbackDokter();   break;
+            case 1: manajemenAkunDokter(); break;
+            case 2: menuReservasiPasien(); break;
+            case 3: menuHistoryPasien(); break;
+            case 4: menuResepDokter(); break;
+            case 5: menuFeedbackDokter(); break;
             case 0:
                 printf("\n  [+] Logout berhasil.\n");
                 idDokterLogin = -1;
-                pauseScreen(); return;
+                system("pause");
+                return;
             default:
                 printf("  [!] Pilihan tidak valid!\n");
-                pauseScreen();
+                system("pause");
         }
     } while (1);
 }
@@ -1049,7 +1279,10 @@ void menuUtama() {
         printf("  [2] Login / Registrasi sebagai Dokter\n");
         printf("  [0] Keluar\n");
         printLine('-', 60);
-        getInputInt("Pilihan", &pilihan);
+        printf("  Pilihan : ");
+        scanf("%d", &pilihan);
+        getchar();
+
         switch (pilihan) {
             case 1: {
                 int sub;
@@ -1058,9 +1291,18 @@ void menuUtama() {
                 printf("  [2] Registrasi Pasien\n");
                 printf("  [0] Kembali\n");
                 printLine('-', 60);
-                getInputInt("Pilihan", &sub);
-                if      (sub == 1) { if (loginPasien()) menuPasien(); }
-                else if (sub == 2) menuRegistrasiPasien();
+                printf("  Pilihan : ");
+                scanf("%d", &sub);
+                getchar();
+
+                switch (sub) {
+                    case 1: if (loginPasien()) menuPasien(); break;
+                    case 2: menuRegistrasiPasien(); break;
+                    case 0: break;
+                    default:
+                        printf("  [!] Pilihan tidak valid!\n");
+                        system("pause");
+                }
                 break;
             }
             case 2: {
@@ -1070,28 +1312,33 @@ void menuUtama() {
                 printf("  [2] Registrasi Dokter\n");
                 printf("  [0] Kembali\n");
                 printLine('-', 60);
-                getInputInt("Pilihan", &sub);
-                if      (sub == 1) { if (loginDokter()) menuDokter(); }
-                else if (sub == 2) menuRegistrasiDokter();
+                printf("  Pilihan : ");
+                scanf("%d", &sub);
+                getchar();
+
+                switch (sub) {
+                    case 1: if (loginDokter()) menuDokter(); break;
+                    case 2: menuRegistrasiDokter(); break;
+                    case 0: break;
+                    default:
+                        printf("  [!] Pilihan tidak valid!\n");
+                        system("pause");
+                }
                 break;
             }
             case 0:
-                printHeader("SAMPAI JUMPA!");
+                system("cls");
                 printf("  Terima kasih telah menggunakan DeOctor.\n\n");
                 exit(0);
             default:
                 printf("  [!] Pilihan tidak valid!\n");
-                pauseScreen();
+                system("pause");
         }
     } while (1);
 }
 
 int main() {
-    // Coba load dari file .dat dulu
-    // Kalau belum ada (pertama kali), pakai data seed lalu simpan
-    if (!loadData()) {
-        inisialisasiData();
-    }
+    loadData();
     menuUtama();
     return 0;
 }
