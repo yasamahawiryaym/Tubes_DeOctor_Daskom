@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+//yasagendut
 // ===== CONSTANTS =====
 #define MAX_PASIEN     100 //konstan
 #define MAX_DOKTER     50
